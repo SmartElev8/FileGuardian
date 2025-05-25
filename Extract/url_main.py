@@ -1,5 +1,5 @@
 '''
- 
+URL scanning functionality for malware detection
 '''
 
 import pandas as pd
@@ -10,7 +10,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression
 import pickle
-
+import sys
+import json
 
 def sanitization(web):
     web = web.lower()
@@ -29,35 +30,58 @@ def sanitization(web):
         token.remove('com')
     return token
 
-urls = []
-urls.append(input("Input the URL that you want to check (eg. google.com) : "))
-#print (urls)
+def scan_url(url):
+    # Using whitelist filter as the model fails in many legit cases
+    whitelist = ['hackthebox.eu','root-me.org','gmail.com']
+    
+    if url in whitelist:
+        return {
+            'is_malicious': False,
+            'message': 'URL is in whitelist',
+            'details': {'whitelisted': True}
+        }
+    
+    # Loading the model
+    try:
+        with open("Classifier/pickel_model.pkl", 'rb') as f1:
+            lgr = pickle.load(f1)
+        with open("Classifier/pickel_vector.pkl", 'rb') as f2:
+            vectorizer = pickle.load(f2)
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error loading model: {str(e)}',
+            'details': {'error': str(e)}
+        }
+    
+    # Predicting
+    try:
+        x = vectorizer.transform([url])
+        y_predict = lgr.predict(x)
+        is_malicious = y_predict[0] == 'bad'
+        
+        return {
+            'is_malicious': is_malicious,
+            'message': 'URL is potentially malicious' if is_malicious else 'URL appears to be safe',
+            'details': {'prediction': 'malicious' if is_malicious else 'safe'}
+        }
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error during analysis: {str(e)}',
+            'details': {'error': str(e)}
+        }
 
-# Using whitelist filter as the model fails in many legit cases since the biggest problem is not finding the malicious urls but to segregate the good ones
-whitelist = ['hackthebox.eu','root-me.org','gmail.com']
-s_url = [i for i in urls if i not in whitelist]
-
-#Loading the model
-file = "Classifier/pickel_model.pkl"
-with open(file, 'rb') as f1:  
-    lgr = pickle.load(f1)
-f1.close()
-file = "Classifier/pickel_vector.pkl"
-with open(file, 'rb') as f2:  
-    vectorizer = pickle.load(f2)
-f2.close()
-
-#predicting
-x = vectorizer.transform(s_url)
-y_predict = lgr.predict(x)
-
-for site in whitelist:
-    s_url.append(site)
-#print(s_url)
-
-predict = list(y_predict)
-for j in range(0,len(whitelist)):
-    predict.append('good')
-print("\nThe entered domain is: ", predict[0])
-print("\n\nIf you feel that this prediction is wrong, or if you are not so sure about this output\nyou can contact us at kabirdhruw@protonmail.com we'll check the URL and update the machine\naccodingly. Thank you.")
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print(json.dumps({
+            'is_malicious': False,
+            'message': 'Please provide a URL as argument',
+            'details': {'error': 'Missing URL argument'}
+        }))
+        sys.exit(1)
+        
+    url = sys.argv[1]
+    result = scan_url(url)
+    print(json.dumps(result))
 
