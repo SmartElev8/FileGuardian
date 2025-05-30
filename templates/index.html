@@ -1247,6 +1247,7 @@
         </div>
     </section>
 
+<<<<<<< Updated upstream
     <!-- Features Section -->
     <section class="section bg-light" id="features">
         <div class="container">
@@ -1258,6 +1259,26 @@
                     <div class="feature-card card h-100">
                         <div class="feature-icon">
                             <i class="fas fa-file-shield"></i>
+=======
+            <!-- Upload Section -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Scan Files or URLs</h5>
+                        
+                        <!-- File Upload -->
+                        <div class="upload-area mb-4" id="dropZone">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-secondary"></i>
+                            <h5>Drag & Drop Files Here</h5>
+                            <p class="text-muted">Supported file types: EXE, PDF, DOCX</p>
+                            <p class="text-muted">or</p>
+                            <form action="/scan/file" method="post" enctype="multipart/form-data" id="uploadForm">
+                                <input type="file" name="file" id="fileInput" class="d-none" accept=".exe,.pdf,.docx">
+                                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                    Choose Files
+                                </button>
+                            </form>
+>>>>>>> Stashed changes
                         </div>
                         <h3 class="feature-title">Advanced File Analysis</h3>
                         <p class="feature-description">Our AI-powered system scans files for malicious code patterns, suspicious behavior signatures, and known malware threats.</p>
@@ -1781,6 +1802,8 @@
                 Array.from(fileInput.files).forEach((file, index) => {
                     const fileSize = (file.size / 1024).toFixed(2);
                     const fileItem = document.createElement('div');
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     fileItem.className = 'file-item';
                     fileItem.style.animationDelay = `${index * 0.1}s`;
                     fileItem.innerHTML = `
@@ -1794,6 +1817,40 @@
                         <button type="button" class="file-remove" onclick="removeFile('${file.name}')">
                             <i class="fas fa-times"></i>
                         </button>
+=======
+                    fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    
+                    // Get file icon based on extension
+                    let fileIcon = 'fa-file';
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    if (extension === 'exe') fileIcon = 'fa-file-code';
+                    else if (extension === 'pdf') fileIcon = 'fa-file-pdf';
+                    else if (extension === 'docx') fileIcon = 'fa-file-word';
+                    
+                    fileItem.innerHTML = `
+                        <div>
+                            <i class="fas ${fileIcon} me-2"></i>
+                            ${file.name}
+                        </div>
+                        <span class="badge bg-secondary">${fileSize} KB</span>
+>>>>>>> Stashed changes
+=======
+                    fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    
+                    // Get file icon based on extension
+                    let fileIcon = 'fa-file';
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    if (extension === 'exe') fileIcon = 'fa-file-code';
+                    else if (extension === 'pdf') fileIcon = 'fa-file-pdf';
+                    else if (extension === 'docx') fileIcon = 'fa-file-word';
+                    
+                    fileItem.innerHTML = `
+                        <div>
+                            <i class="fas ${fileIcon} me-2"></i>
+                            ${file.name}
+                        </div>
+                        <span class="badge bg-secondary">${fileSize} KB</span>
+>>>>>>> Stashed changes
                     `;
                     fileList.appendChild(fileItem);
                 });
