@@ -7,11 +7,23 @@ import datetime
 import mimetypes
 import re
 from pathlib import Path
+from ML_Model.virustotal_api import VirusTotalAPI
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'exe', 'pdf', 'docx'}  # Add PDF and DOCX to allowed extensions
+
+# Initialize VirusTotal API
+vt_api = VirusTotalAPI(api_key="49746271dbbd6d76591910613778dea3911cdc30506d531deadc24509d38c221")
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -118,6 +130,75 @@ def get_file_details(filepath):
     
     return details
 
+def run_local_file_scan(filepath: str) -> dict:
+    """Run local file scanning using existing models"""
+    try:
+        # Determine which scanner to use based on file extension
+        file_extension = os.path.splitext(filepath)[1].lower()
+        if file_extension in ['.pdf', '.docx']:
+            scanner_script = 'Extract/document_scanner/document_main.py'
+        else:
+            scanner_script = 'Extract/PE_main.py'
+        
+        # Run the appropriate scanner
+        result = subprocess.run(['python', scanner_script, filepath], 
+                              capture_output=True, text=True)
+        
+        # Parse the result
+        try:
+            result_data = json.loads(result.stdout)
+            is_malicious = result_data.get('is_malicious', False)
+            message = result_data.get('message', 'Analysis completed')
+            details = result_data.get('details', {})
+        except json.JSONDecodeError:
+            is_malicious = 'malicious' in result.stdout.lower()
+            message = result.stdout
+            details = {}
+        
+        return {
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
+            'scan_type': 'local'
+        }
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error during local analysis: {str(e)}',
+            'details': {'error': str(e)},
+            'scan_type': 'local'
+        }
+
+def run_local_url_scan(url: str) -> dict:
+    """Run local URL scanning using existing models"""
+    try:
+        result = subprocess.run(['python', 'Extract/url_main.py', url], 
+                              capture_output=True, text=True)
+        
+        try:
+            result_data = json.loads(result.stdout)
+            is_malicious = result_data.get('is_malicious', False)
+            message = result_data.get('message', 'Analysis completed')
+            details = result_data.get('details', {})
+        except json.JSONDecodeError:
+            is_malicious = 'malicious' in result.stdout.lower()
+            message = result.stdout
+            details = {}
+        
+        return {
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
+            'scan_type': 'local'
+        }
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error during local analysis: {str(e)}',
+            'details': {'error': str(e)},
+            'scan_type': 'local'
+        }
+
 @app.route('/scan/file', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:
@@ -135,35 +216,29 @@ def scan_file():
     file.save(filepath)
     
     try:
-        # Run the PE scanner
-        result = subprocess.run(['python', 'Extract/PE_main.py', filepath], 
-                              capture_output=True, text=True)
+        # First try VirusTotal API
+        result = vt_api.scan_file(filepath)
         
-        # Parse the result
-        try:
-            result_data = json.loads(result.stdout)
-            is_malicious = result_data.get('is_malicious', False)
-            message = result_data.get('message', 'Analysis completed')
-            details = result_data.get('details', {})
-        except json.JSONDecodeError:
-            is_malicious = 'malicious' in result.stdout.lower()
-            message = result.stdout
-            details = {}
-        
-        # Get additional file details
-        file_details = get_file_details(filepath)
-        if details:
-            details.update(file_details)
-        else:
-            details = file_details
+        # If VirusTotal is unavailable or rate limited, fall back to local scanning
+        if result.get('use_fallback', False):
+            logger.info("Falling back to local scanning due to: " + result.get('error', 'Unknown error'))
+            result = run_local_file_scan(filepath)
         
         # Clean up the uploaded file
         os.remove(filepath)
         
         return jsonify({
-            'is_malicious': is_malicious,
-            'message': message,
-            'details': details,
+            'is_malicious': result.get('is_malicious', False),
+            'message': result.get('message', 'File analysis completed'),
+            'details': {
+                'malicious_ratio': result.get('malicious_ratio', 0),
+                'positives': result.get('positives', 0),
+                'total': result.get('total', 0),
+                'scan_date': result.get('scan_date'),
+                'permalink': result.get('permalink'),
+                'error': result.get('error'),
+                'scan_type': result.get('scan_type', 'virustotal')
+            },
             'file_name': filename
         })
     except Exception as e:
@@ -181,25 +256,26 @@ def scan_url():
         return jsonify({'error': 'No URL provided'}), 400
     
     try:
-        # Run the URL scanner
-        result = subprocess.run(['python', 'Extract/url_main.py', url], 
-                              capture_output=True, text=True)
+        # First try VirusTotal API
+        result = vt_api.scan_url(url)
         
-        # Parse the result
-        try:
-            result_data = json.loads(result.stdout)
-            is_malicious = result_data.get('is_malicious', False)
-            message = result_data.get('message', 'Analysis completed')
-            details = result_data.get('details', {})
-        except json.JSONDecodeError:
-            is_malicious = 'malicious' in result.stdout.lower()
-            message = result.stdout
-            details = {}
+        # If VirusTotal is unavailable or rate limited, fall back to local scanning
+        if result.get('use_fallback', False):
+            logger.info("Falling back to local scanning due to: " + result.get('error', 'Unknown error'))
+            result = run_local_url_scan(url)
         
         return jsonify({
-            'is_malicious': is_malicious,
-            'message': message,
-            'details': details,
+            'is_malicious': result.get('is_malicious', False),
+            'message': result.get('message', 'URL analysis completed'),
+            'details': {
+                'malicious_ratio': result.get('malicious_ratio', 0),
+                'positives': result.get('positives', 0),
+                'total': result.get('total', 0),
+                'scan_date': result.get('scan_date'),
+                'permalink': result.get('permalink'),
+                'error': result.get('error'),
+                'scan_type': result.get('scan_type', 'virustotal')
+            },
             'url': url
         })
     except Exception as e:
