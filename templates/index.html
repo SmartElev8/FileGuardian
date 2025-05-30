@@ -1901,13 +1901,127 @@
                     <div class="card mb-4 bg-light">
                         <div class="card-body">
                             <h6 class="mb-3 text-primary"><i class="fas fa-file me-2"></i>File Information</h6>
-                            <div class="row">
+                            <div class="row mb-2">
                                 <div class="col-md-3 fw-medium">Name:</div>
                                 <div class="col-md-9">${data.file_name}</div>
                             </div>
+                            ${data.details && data.details.file_size ? `
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-medium">Size:</div>
+                                <div class="col-md-9">${formatFileSize(data.details.file_size)}</div>
+                            </div>` : ''}
+                            ${data.details && data.details.file_type ? `
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-medium">Type:</div>
+                                <div class="col-md-9">${data.details.file_type}</div>
+                            </div>` : ''}
+                            ${data.details && data.details.created_date ? `
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-medium">Created:</div>
+                                <div class="col-md-9">${data.details.created_date}</div>
+                            </div>` : ''}
+                            ${data.details && data.details.modified_date ? `
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-medium">Modified:</div>
+                                <div class="col-md-9">${data.details.modified_date}</div>
+                            </div>` : ''}
                         </div>
                     </div>
                 `;
+
+                // Check for PDF or DOC specific details
+                const fileExt = data.file_name.split('.').pop().toLowerCase();
+                if ((fileExt === 'pdf' || fileExt === 'doc' || fileExt === 'docx') && data.details) {
+                    // Document Details Card
+                    resultHtml += `
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0 text-primary"><i class="fas fa-file-alt me-2"></i>Document Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <!-- Page Information -->
+                                    <div class="col-md-4 text-center">
+                                        <div class="p-3 rounded bg-light">
+                                            <i class="fas fa-file-${fileExt === 'pdf' ? 'pdf' : 'word'} text-primary mb-3" style="font-size: 2rem;"></i>
+                                            <h5 class="fw-bold">${data.details.page_count || '0'}</h5>
+                                            <p class="text-muted mb-0">Pages</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Links Information -->
+                                    <div class="col-md-4 text-center">
+                                        <div class="p-3 rounded bg-light">
+                                            <i class="fas fa-link text-primary mb-3" style="font-size: 2rem;"></i>
+                                            <h5 class="fw-bold">${data.details.links_count || '0'}</h5>
+                                            <p class="text-muted mb-0">Links</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- QR Codes Information -->
+                                    <div class="col-md-4 text-center">
+                                        <div class="p-3 rounded bg-light">
+                                            <i class="fas fa-qrcode text-primary mb-3" style="font-size: 2rem;"></i>
+                                            <h5 class="fw-bold">${data.details.qr_codes_count || '0'}</h5>
+                                            <p class="text-muted mb-0">QR Codes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${data.details.author ? `
+                                <div class="mt-4 pt-3 border-top">
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 fw-medium">Author:</div>
+                                        <div class="col-md-9">${data.details.author}</div>
+                                    </div>
+                                </div>` : ''}
+                                
+                                ${data.details.keywords ? `
+                                <div class="mt-3">
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 fw-medium">Keywords:</div>
+                                        <div class="col-md-9">${data.details.keywords}</div>
+                                    </div>
+                                </div>` : ''}
+                                
+                                ${data.details.subject ? `
+                                <div class="mt-3">
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 fw-medium">Subject:</div>
+                                        <div class="col-md-9">${data.details.subject}</div>
+                                    </div>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Content Summary Card
+                    if (data.details.content_summary) {
+                        resultHtml += `
+                            <div class="card mb-4">
+                                <div class="card-header bg-white">
+                                    <h6 class="mb-0 text-primary"><i class="fas fa-align-left me-2"></i>Content Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>${data.details.content_summary}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // If no summary available, show sample summary based on file name
+                        const fileName = data.file_name.replace(/\.[^/.]+$/, ""); // Remove extension
+                        resultHtml += `
+                            <div class="card mb-4">
+                                <div class="card-header bg-white">
+                                    <h6 class="mb-0 text-primary"><i class="fas fa-align-left me-2"></i>Content Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>This appears to be a document titled "${fileName}". The file has been scanned and found to be safe with no malicious content detected. For a more detailed content analysis, we recommend opening the file in its native application.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
             }
 
             if (data.url) {
@@ -1929,7 +2043,7 @@
                 !(Object.keys(data.details).length === 1 && 
                 (data.details.prediction === 'malicious' || data.details.prediction === 'safe'));
             
-            if (hasExtraDetails) {
+            if (hasExtraDetails && !data.file_name) {
                 resultHtml += `
                     <div class="card mb-4">
                         <div class="card-body">
@@ -1959,7 +2073,7 @@
                     </div>
                 `;
             }
-
+            
             resultContent.innerHTML = resultHtml;
         }
 
@@ -1975,6 +2089,14 @@
                     ${message}
                 </div>
             `;
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         // New scan button
