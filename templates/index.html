@@ -1812,6 +1812,7 @@
                     const fileSize = (file.size / 1024).toFixed(2);
                     const fileItem = document.createElement('div');
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     fileItem.className = 'file-item';
                     fileItem.style.animationDelay = `${index * 0.1}s`;
                     fileItem.innerHTML = `
@@ -1825,6 +1826,23 @@
                         <button type="button" class="file-remove" onclick="removeFile('${file.name}')">
                             <i class="fas fa-times"></i>
                         </button>
+=======
+                    fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    
+                    // Get file icon based on extension
+                    let fileIcon = 'fa-file';
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    if (extension === 'exe') fileIcon = 'fa-file-code';
+                    else if (extension === 'pdf') fileIcon = 'fa-file-pdf';
+                    else if (extension === 'docx') fileIcon = 'fa-file-word';
+                    
+                    fileItem.innerHTML = `
+                        <div>
+                            <i class="fas ${fileIcon} me-2"></i>
+                            ${file.name}
+                        </div>
+                        <span class="badge bg-secondary">${fileSize} KB</span>
+>>>>>>> Stashed changes
 =======
                     fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
                     
