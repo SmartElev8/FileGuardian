@@ -1,0 +1,107 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<<
+/Producer (pypdf)
+/Author (SafeFileGuard Testing)
+/Subject (Sample Document for Testing)
+/Title (PDF Analysis Test)
+/Keywords (pdf\054test\054analysis\054sample\054document)
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 4 0 R ]
+>>
+endobj
+3 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+4 0 obj
+<<
+/Annots [ 5 0 R ]
+/Contents 6 0 R
+/MediaBox [ 0 0 612 792 ]
+/Resources <<
+/Font 7 0 R
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Parent 2 0 R
+>>
+endobj
+5 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057www\056python\056org)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 153.02 404 193.03 416 ]
+/Subtype /Link
+/Type /Annot
+>>
+endobj
+6 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ]
+/Length 619
+>>
+stream
+Gau1.bt`mV'SZ:0MS#r:ir$SGClQ#HTlFB=>?]DE,@HtS]`Ss@F]p>$6ds$9baEOe+l#>6k_n$lM\tAI_<iHNb!<(Zg6N35#p.U_F%5mr=+]q/(@)m<C\`:RQdO)MYDKXp""Gf;`[VMAUh/l""On(HYC<!Y!`20[_L9#jMM%_;!qd&g)K(S2HLDYu*UbXl[K"Q&5F[Oe-C/P0eBQOKjsl;sd(dfNrH7O@TbaOV.)Q%B-KK3>c[lb_[]0'eq=h;Q?74=2pPh_CCC()B8(+7u)(W=lPsMMQ/#n)+3sDZ0>`5#SEbaPqXo*cO#.4Z:W;_54,cjsIVH8:"8Q27?e\7]A6*1/<WdeA;"fj5.Ic26MEmiGb@s'D;APd0XMX'*N:;TUtDcW@oOWK^f5W8BI3*YSOU4+&ShR?Wmh%+^4ODglSUT6?>TM4\(catr+'A*M-78sJ(;fh1@-N\KOdR4Wo%KNq7)+'J*\eM8I6!i(WBi:N^SCXT",:(%Q\[n>\qjg0u4l\BWKHj1n(C@(!N-%&28>JpOj!8"B6^e,j$)p<^3h0t:;D*r-J.[Mm"["'+*\u1&>U,A/BmN7JKCluHOEbq<=?unJCb/H?IBUHQ)iKe`!!~>
+endstream
+endobj
+7 0 obj
+<<
+/F1 8 0 R
+/F2 9 0 R
+>>
+endobj
+8 0 obj
+<<
+/BaseFont /Helvetica
+/Encoding /WinAnsiEncoding
+/Name /F1
+/Subtype /Type1
+/Type /Font
+>>
+endobj
+9 0 obj
+<<
+/BaseFont /Helvetica-Bold
+/Encoding /WinAnsiEncoding
+/Name /F2
+/Subtype /Type1
+/Type /Font
+>>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000210 00000 n 
+0000000269 00000 n 
+0000000318 00000 n 
+0000000525 00000 n 
+0000000700 00000 n 
+0000001410 00000 n 
+0000001451 00000 n 
+0000001558 00000 n 
+trailer
+<<
+/Size 10
+/Root 3 0 R
+/Info 1 0 R
+>>
+startxref
+1670
+%%EOF
