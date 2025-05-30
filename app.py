@@ -7,9 +7,13 @@ import json
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['ALLOWED_EXTENSIONS'] = {'exe', 'pdf', 'docx'}  # Add PDF and DOCX to allowed extensions
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/')
 def home():
@@ -24,13 +28,23 @@ def scan_file():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'File type not allowed'}), 400
+    
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
     
     try:
-        # Run the PE scanner
-        result = subprocess.run(['python', 'Extract/PE_main.py', filepath], 
+        # Determine which scanner to use based on file extension
+        file_extension = os.path.splitext(filename)[1].lower()
+        if file_extension in ['.pdf', '.docx']:
+            scanner_script = 'Extract/document_scanner/document_main.py'
+        else:
+            scanner_script = 'Extract/PE_main.py'
+        
+        # Run the appropriate scanner
+        result = subprocess.run(['python', scanner_script, filepath], 
                               capture_output=True, text=True)
         
         # Parse the result
@@ -42,7 +56,7 @@ def scan_file():
         except json.JSONDecodeError:
             is_malicious = 'malicious' in result.stdout.lower()
             message = result.stdout
-            details = {}  # No raw_output
+            details = {}
         
         # Clean up the uploaded file
         os.remove(filepath)
@@ -98,4 +112,4 @@ def scan_url():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(host='127.0.0.1', port=5001, debug=True) 
