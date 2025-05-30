@@ -15,6 +15,30 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 def home():
     return render_template('index.html')
 
+@app.route('/documentation')
+def documentation():
+    return render_template('documentation.html')
+
+@app.route('/api')
+def api_docs():
+    return render_template('api.html')
+
+@app.route('/api-reference')
+def api_reference():
+    return render_template('api_reference.html')
+
+@app.route('/faqs')
+def faqs():
+    return render_template('faqs.html')
+
+@app.route('/threat-database')
+def threat_database():
+    return render_template('threat-database.html')
+
+@app.route('/support')
+def support():
+    return render_template('support.html')
+
 @app.route('/scan/file', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:

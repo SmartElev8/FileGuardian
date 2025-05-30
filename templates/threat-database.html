@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Database | SafeFileGuard Pro</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand text-primary fw-bold" href="/">
+                <i class="fas fa-shield-alt me-2"></i>SafeFileGuard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#scanner">Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#how-it-works">How It Works</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="py-5 text-center">
+        <div class="container">
+            <h1 class="fw-bold">Threat Database</h1>
+            <p class="lead text-muted">Explore our comprehensive database of known malware and digital threats</p>
+        </div>
+    </header>
+
+    <!-- Database Content -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">Filter Threats</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="threatType" class="form-label">Threat Type</label>
+                                    <select class="form-select" id="threatType">
+                                        <option selected>All Types</option>
+                                        <option>Virus</option>
+                                        <option>Trojan</option>
+                                        <option>Ransomware</option>
+                                        <option>Spyware</option>
+                                        <option>Worm</option>
+                                        <option>Adware</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="severity" class="form-label">Severity</label>
+                                    <select class="form-select" id="severity">
+                                        <option selected>All Levels</option>
+                                        <option>Critical</option>
+                                        <option>High</option>
+                                        <option>Medium</option>
+                                        <option>Low</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="searchThreat" class="form-label">Search</label>
+                                    <input type="text" class="form-control" id="searchThreat" placeholder="Search by name or ID...">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h2 class="fw-bold mb-4">Threat Database</h2>
+                            <p class="mb-4">Our threat database is currently under development. Once complete, it will provide a searchable repository of known malware and digital threats, including detailed information about their behavior, detection methods, and mitigation strategies.</p>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                The threat database will be available in the next update. Please check back later for access to this resource.
+                            </div>
+                            
+                            <h3 class="fw-bold mt-5 mb-3">Coming Soon</h3>
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3" style="width: 70px; height: 70px;">
+                                                <i class="fas fa-search m-auto text-primary"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Advanced Search</h5>
+                                            <p class="text-muted">Search threats by name, type, behavior patterns, and affected systems</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3" style="width: 70px; height: 70px;">
+                                                <i class="fas fa-chart-network m-auto text-primary"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Threat Intelligence</h5>
+                                            <p class="text-muted">Get detailed analysis and intelligence about emerging threats</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body text-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3" style="width: 70px; height: 70px;">
+                                                <i class="fas fa-shield-virus m-auto text-primary"></i>
+                                            </div>
+                                            <h5 class="fw-bold">Mitigation Guides</h5>
+                                            <p class="text-muted">Step-by-step guides for mitigating and removing specific threats</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h4 class="text-primary fw-bold mb-3">SafeFileGuard</h4>
+                    <p class="text-muted">Advanced malware detection system powered by artificial intelligence and machine learning.</p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="https://github.com" target="_blank" class="text-white"><i class="fab fa-github fa-lg"></i></a>
+                        <a href="https://linkedin.com" target="_blank" class="text-white"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="https://twitter.com" target="_blank" class="text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="https://youtube.com" target="_blank" class="text-white"><i class="fab fa-youtube fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-4 mb-md-0">
+                    <h5 class="mb-3">Navigation</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-muted text-decoration-none mb-2 d-inline-block">Home</a></li>
+                        <li><a href="/#features" class="text-muted text-decoration-none mb-2 d-inline-block">Features</a></li>
+                        <li><a href="/#scanner" class="text-muted text-decoration-none mb-2 d-inline-block">Scanner</a></li>
+                        <li><a href="/#how-it-works" class="text-muted text-decoration-none mb-2 d-inline-block">How It Works</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-6 mb-4 mb-md-0">
+                    <h5 class="mb-3">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/documentation" class="text-muted text-decoration-none mb-2 d-inline-block">Documentation</a></li>
+                        <li><a href="/api" class="text-muted text-decoration-none mb-2 d-inline-block">API</a></li>
+                        <li><a href="/faqs" class="text-muted text-decoration-none mb-2 d-inline-block">FAQs</a></li>
+                        <li><a href="/threat-database" class="text-muted text-decoration-none mb-2 d-inline-block">Threat Database</a></li>
+                        <li><a href="/support" class="text-muted text-decoration-none mb-2 d-inline-block">Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mt-4 mt-md-0">
+                    <h5 class="mb-3">About the Project</h5>
+                    <p class="text-white mb-3">This advanced malware detection system was developed as a final year project, combining cutting-edge AI and security research to protect against digital threats.</p>
+                    <span class="badge bg-secondary">Version 1.0</span>
+                </div>
+            </div>
+            <div class="border-top border-secondary mt-4 pt-4 text-center text-muted">
+                <p>© 2023 SafeFileGuard | Advanced Malware Detection System | All Rights Reserved</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

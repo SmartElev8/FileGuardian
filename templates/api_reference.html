@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference | SafeFileGuard Pro</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --secondary-color: #6c757d;
+            --dark-color: #0e1133;
+            --light-color: #f8f9fa;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--dark-color);
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .page-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 80px 0 50px;
+            margin-bottom: 50px;
+        }
+        .footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 50px 0 20px;
+            margin-top: 100px;
+        }
+        .footer-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        .footer-description {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+        }
+        .footer-social a {
+            color: white;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-top: 40px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .api-card {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        .api-endpoint {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .http-method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .http-post {
+            background-color: #49cc90;
+            color: white;
+        }
+        .http-get {
+            background-color: #61affe;
+            color: white;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-shield-alt logo-shield me-2"></i>
+                SafeFileGuard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/documentation">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api">API</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/api-reference">API Reference</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/faqs">FAQs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/threat-database">Threat Database</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/support">Support</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="fw-bold">API Reference</h1>
+            <p class="lead">Integrate SafeFileGuard's malware detection capabilities into your applications</p>
+        </div>
+    </header>
+
+    <!-- API Documentation -->
+    <section class="container mb-5">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Contents</h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#introduction">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#authentication">Authentication</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#file-scan">File Scan API</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#url-scan">URL Scan API</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#response-codes">Response Codes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#rate-limits">Rate Limits</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="introduction" class="fw-bold mb-4">Introduction</h2>
+                        <p>The SafeFileGuard API provides programmatic access to our malware detection capabilities. You can use our API to scan files and URLs for potential threats, and integrate these features into your own applications and workflows.</p>
+                        <p>All API endpoints return data in JSON format and use HTTPS for security.</p>
+                    </div>
+                </div>
+
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="authentication" class="fw-bold mb-4">Authentication</h2>
+                        <p>To use the SafeFileGuard API, you need an API key. Each request must include your API key in the HTTP header:</p>
+                        <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+                        <p>To obtain an API key, please contact our support team.</p>
+                    </div>
+                </div>
+
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="file-scan" class="fw-bold mb-4">File Scan API</h2>
+                        <p>Use this endpoint to scan files for malicious content.</p>
+
+                        <div class="api-endpoint">
+                            <span class="http-method http-post">POST</span>
+                            <span>/scan/file</span>
+                        </div>
+
+                        <h5 class="fw-bold">Request Parameters</h5>
+                        <p>Send the file as a multipart/form-data upload with the key name 'file'.</p>
+
+                        <h5 class="fw-bold mt-4">Example Request</h5>
+                        <pre>curl -X POST https://api.safe-file-guard.com/scan/file \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -F "file=@/path/to/file.exe"</pre>
+
+                        <h5 class="fw-bold mt-4">Example Response</h5>
+                        <pre>{
+    "is_malicious": true,
+    "message": "Malware detected: Trojan.GenericKD.45776123",
+    "details": {
+        "file_name": "file.exe",
+        "file_size": 245760,
+        "file_type": "PE32 executable",
+        "sha256": "8a9f7d3c5b6a1e2d4f5g6h7j8k9l0m1n2o3p4q5r6s7t8u9v0w",
+        "threat_type": "Trojan",
+        "threat_name": "Trojan.GenericKD.45776123",
+        "confidence": "high",
+        "signatures_matched": ["suspicious_imports", "known_malware_pattern"]
+    },
+    "scan_id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="url-scan" class="fw-bold mb-4">URL Scan API</h2>
+                        <p>Use this endpoint to scan URLs for malicious content.</p>
+
+                        <div class="api-endpoint">
+                            <span class="http-method http-post">POST</span>
+                            <span>/scan/url</span>
+                        </div>
+
+                        <h5 class="fw-bold">Request Parameters</h5>
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>url</td>
+                                    <td>string</td>
+                                    <td>The URL to scan</td>
+                                    <td>Yes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h5 class="fw-bold mt-4">Example Request</h5>
+                        <pre>curl -X POST https://api.safe-file-guard.com/scan/url \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"url": "https://example.com/suspicious-page"}'</pre>
+
+                        <h5 class="fw-bold mt-4">Example Response</h5>
+                        <pre>{
+    "is_malicious": true,
+    "message": "Malicious URL detected: Phishing site",
+    "details": {
+        "url": "https://example.com/suspicious-page",
+        "threat_type": "Phishing",
+        "confidence": "high",
+        "categories": ["phishing", "malicious_content"],
+        "blacklisted": true,
+        "related_threats": ["credential_theft"]
+    },
+    "scan_id": "q7r8s9t0-u1v2-w3x4-y5z6-a7b8c9d0e1f2"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="response-codes" class="fw-bold mb-4">Response Codes</h2>
+                        <p>The SafeFileGuard API uses standard HTTP response codes to indicate the success or failure of a request.</p>
+
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>200</td>
+                                    <td>Success - The request was processed successfully</td>
+                                </tr>
+                                <tr>
+                                    <td>400</td>
+                                    <td>Bad Request - The request was invalid or improperly formatted</td>
+                                </tr>
+                                <tr>
+                                    <td>401</td>
+                                    <td>Unauthorized - Authentication failed or API key is invalid</td>
+                                </tr>
+                                <tr>
+                                    <td>403</td>
+                                    <td>Forbidden - The API key does not have permission to access the requested resource</td>
+                                </tr>
+                                <tr>
+                                    <td>404</td>
+                                    <td>Not Found - The requested resource was not found</td>
+                                </tr>
+                                <tr>
+                                    <td>429</td>
+                                    <td>Too Many Requests - Rate limit exceeded</td>
+                                </tr>
+                                <tr>
+                                    <td>500</td>
+                                    <td>Internal Server Error - Something went wrong on our end</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card api-card">
+                    <div class="card-body">
+                        <h2 id="rate-limits" class="fw-bold mb-4">Rate Limits</h2>
+                        <p>The SafeFileGuard API enforces rate limits to ensure fair usage and system stability. Rate limits vary by subscription tier:</p>
+
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Rate Limit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic</td>
+                                    <td>100 requests per day</td>
+                                </tr>
+                                <tr>
+                                    <td>Professional</td>
+                                    <td>1,000 requests per day</td>
+                                </tr>
+                                <tr>
+                                    <td>Enterprise</td>
+                                    <td>Custom limits based on requirements</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p class="mt-3">When you exceed your rate limit, the API will return a 429 response code. The response headers will include information about when you can resume making requests.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-5 mb-lg-0">
+                    <div class="footer-logo">SafeFileGuard</div>
+                    <p class="footer-description">Advanced malware detection system powered by artificial intelligence and machine learning. Protecting your digital assets from emerging threats.</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-5 mb-md-0">
+                    <h5 class="text-white mb-4">Product</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/" class="text-white-50 text-decoration-none">Home</a></li>
+                        <li class="mb-2"><a href="/documentation" class="text-white-50 text-decoration-none">Documentation</a></li>
+                        <li class="mb-2"><a href="/api" class="text-white-50 text-decoration-none">API</a></li>
+                        <li class="mb-2"><a href="/threat-database" class="text-white-50 text-decoration-none">Threat Database</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-5 mb-md-0">
+                    <h5 class="text-white mb-4">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/faqs" class="text-white-50 text-decoration-none">FAQs</a></li>
+                        <li class="mb-2"><a href="/support" class="text-white-50 text-decoration-none">Support</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Blog</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Community</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <h5 class="text-white mb-4">Contact Us</h5>
+                    <ul class="list-unstyled text-white-50">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> support@safe-file-guard.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 Security Street, Cyberspace</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 SafeFileGuard | Advanced Malware Detection System | All Rights Reserved</p>
+                <div class="mt-2">
+                    <span class="badge bg-primary">Version 1.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
