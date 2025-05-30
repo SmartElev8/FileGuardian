@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 import io
 import logging
-from ML_Model.virustotal_api import VirusTotalAPI
 
 # PDF libraries
 try:
@@ -35,9 +34,6 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'exe', 'pdf', 'docx', 'doc', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'rtf', 'odt', 'zip', 'rar', 'tar', 'gz'}
-
-# Initialize VirusTotal API
-vt_api = VirusTotalAPI(api_key="49746271dbbd6d76591910613778dea3911cdc30506d531deadc24509d38c221")
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -410,13 +406,8 @@ def scan_file():
     file.save(filepath)
     
     try:
-        # First try VirusTotal API
-        result = vt_api.scan_file(filepath)
-        
-        # If VirusTotal is unavailable or rate limited, fall back to local scanning
-        if result.get('use_fallback', False):
-            logger.info("Falling back to local scanning due to: " + result.get('error', 'Unknown error'))
-            result = run_local_file_scan(filepath)
+        # Run local file scan
+        result = run_local_file_scan(filepath)
         
         # Get additional file details
         file_details = get_file_details(filepath)
@@ -437,18 +428,6 @@ def scan_file():
             'details': result.get('details', {}),
             'file_name': filename
         }
-        
-        # Add VirusTotal specific details if available
-        if result.get('scan_type') == 'virustotal':
-            vt_details = {
-                'malicious_ratio': result.get('malicious_ratio', 0),
-                'positives': result.get('positives', 0),
-                'total': result.get('total', 0),
-                'scan_date': result.get('scan_date'),
-                'permalink': result.get('permalink'),
-                'scan_type': 'virustotal'
-            }
-            response['details'].update(vt_details)
         
         return jsonify(response)
     except Exception as e:
@@ -471,26 +450,13 @@ def scan_url():
         return jsonify({'error': 'No URL provided'}), 400
     
     try:
-        # First try VirusTotal API
-        result = vt_api.scan_url(url)
-        
-        # If VirusTotal is unavailable or rate limited, fall back to local scanning
-        if result.get('use_fallback', False):
-            logger.info("Falling back to local scanning due to: " + result.get('error', 'Unknown error'))
-            result = run_local_url_scan(url)
+        # Run local URL scan
+        result = run_local_url_scan(url)
         
         return jsonify({
             'is_malicious': result.get('is_malicious', False),
             'message': result.get('message', 'URL analysis completed'),
-            'details': {
-                'malicious_ratio': result.get('malicious_ratio', 0),
-                'positives': result.get('positives', 0),
-                'total': result.get('total', 0),
-                'scan_date': result.get('scan_date'),
-                'permalink': result.get('permalink'),
-                'error': result.get('error'),
-                'scan_type': result.get('scan_type', 'virustotal')
-            },
+            'details': result.get('details', {}),
             'url': url
         })
     except Exception as e:

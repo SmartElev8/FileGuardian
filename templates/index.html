@@ -2063,19 +2063,11 @@
             const statusIcon = data.is_malicious ? 'fa-triangle-exclamation' : 'fa-shield-check';
             const statusText = data.is_malicious ? 'Malicious' : 'Safe';
             
-            // Determine scan source
-            const scanSource = data.details?.scan_type === 'virustotal' ? 'VirusTotal Cloud' : 'Local Scan';
-            const scanBadgeClass = data.details?.scan_type === 'virustotal' ? 'bg-info' : 'bg-secondary';
-            
             let resultHtml = `
                 <div class="d-flex align-items-center mb-4 flex-wrap">
                     <span class="status-badge ${statusClass} me-2 mb-2">
                         <i class="fas ${statusIcon}"></i>
                         ${statusText}
-                    </span>
-                    <span class="status-badge ${scanBadgeClass} text-white mb-2">
-                        <i class="fas ${data.details?.scan_type === 'virustotal' ? 'fa-cloud' : 'fa-laptop'}"></i>
-                        Scanned with: ${scanSource}
                     </span>
                 </div>
             `;
