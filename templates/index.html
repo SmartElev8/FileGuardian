@@ -1949,8 +1949,9 @@
         });
 
         function updateFileList() {
+            fileList.innerHTML = '';
+            
             if (fileInput.files.length > 0) {
-                fileList.innerHTML = '';
                 Array.from(fileInput.files).forEach((file, index) => {
                     const fileSize = (file.size / 1024).toFixed(2);
                     const ext = file.name.split('.').pop().toLowerCase();
@@ -1983,8 +1984,10 @@
                     fileList.appendChild(fileItem);
                 });
                 selectedFiles.style.display = 'block';
+                dropZone.style.display = 'none';
             } else {
                 selectedFiles.style.display = 'none';
+                dropZone.style.display = 'block';
             }
         }
 
@@ -2285,13 +2288,23 @@
         }
 
         // New scan button
-        newScanBtn.addEventListener('click', () => {
+        newScanBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             results.classList.remove('show');
             setTimeout(() => {
                 results.style.display = 'none';
                 fileInput.value = '';
                 updateFileList();
                 urlForm.reset();
+                
+                // Scroll to scanner section
+                const scannerSection = document.getElementById('scanner');
+                if (scannerSection) {
+                    window.scrollTo({
+                        top: scannerSection.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
             }, 300);
         });
     </script>
