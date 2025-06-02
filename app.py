@@ -9,6 +9,11 @@ import re
 from pathlib import Path
 import io
 import logging
+import vt
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # PDF libraries
 try:
@@ -43,6 +48,42 @@ os.makedirs(os.path.join('static', 'images'), exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def scan_with_virustotal(file_path=None, url=None):
+    """Scan a file or URL using VirusTotal API"""
+    try:
+        api_key = os.getenv('VT_API_KEY')
+        if not api_key:
+            raise ValueError("VirusTotal API key not found in environment variables")
+
+        client = vt.Client(api_key)
+        results = {}
+
+        if file_path:
+            with open(file_path, 'rb') as f:
+                analysis = client.scan_file(f)
+            analysis_id = analysis.id
+            analysis_result = client.get_object(f"/analyses/{analysis_id}")
+            results = {
+                'id': analysis_id,
+                'status': analysis_result.status,
+                'stats': getattr(analysis_result, 'stats', None)
+            }
+        elif url:
+            analysis = client.scan_url(url)
+            analysis_id = analysis.id
+            analysis_result = client.get_object(f"/analyses/{analysis_id}")
+            results = {
+                'id': analysis_id,
+                'status': analysis_result.status,
+                'url': url
+            }
+
+        client.close()
+        return results
+    except Exception as e:
+        logger.error(f"Error in VirusTotal scan: {str(e)}")
+        return None
 
 @app.route('/')
 def home():
@@ -406,33 +447,50 @@ def scan_file():
     file.save(filepath)
     
     try:
-        # Run local file scan
-        result = run_local_file_scan(filepath)
+        # First try VirusTotal scan
+        vt_result = scan_with_virustotal(file_path=filepath)
+        
+        if vt_result:
+            # Process VirusTotal results
+            is_malicious = vt_result.get('stats', {}).get('malicious', 0) > 0
+            message = 'File is potentially malicious' if is_malicious else 'File appears to be safe'
+            details = {
+                'scan_type': 'virustotal',
+                'stats': vt_result.get('stats', {}),
+                'status': vt_result.get('status')
+            }
+        else:
+            # Fallback to local scan
+            logger.info("Falling back to local scan")
+            result = run_local_file_scan(filepath)
+            is_malicious = result.get('is_malicious', False)
+            message = result.get('message', 'File analysis completed')
+            details = result.get('details', {})
+            details['scan_type'] = 'local'
         
         # Get additional file details
         file_details = get_file_details(filepath)
         logger.info(f"File details: {file_details}")
         
         # Add file details to the result
-        if 'details' not in result:
-            result['details'] = {}
-        result['details'].update(file_details)
+        if 'details' not in details:
+            details = {}
+        details.update(file_details)
         
         # Clean up the uploaded file
         os.remove(filepath)
         
         # Prepare the response
         response = {
-            'is_malicious': result.get('is_malicious', False),
-            'message': result.get('message', 'File analysis completed'),
-            'details': result.get('details', {}),
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
             'file_name': filename
         }
         
         return jsonify(response)
     except Exception as e:
         logger.error(f"Error in scan_file: {str(e)}")
-        # Clean up on error
         if os.path.exists(filepath):
             os.remove(filepath)
             
@@ -450,13 +508,31 @@ def scan_url():
         return jsonify({'error': 'No URL provided'}), 400
     
     try:
-        # Run local URL scan
-        result = run_local_url_scan(url)
+        # First try VirusTotal scan
+        vt_result = scan_with_virustotal(url=url)
+        
+        if vt_result:
+            # Process VirusTotal results
+            is_malicious = vt_result.get('stats', {}).get('malicious', 0) > 0
+            message = 'URL is potentially malicious' if is_malicious else 'URL appears to be safe'
+            details = {
+                'scan_type': 'virustotal',
+                'stats': vt_result.get('stats', {}),
+                'status': vt_result.get('status')
+            }
+        else:
+            # Fallback to local scan
+            logger.info("Falling back to local scan")
+            result = run_local_url_scan(url)
+            is_malicious = result.get('is_malicious', False)
+            message = result.get('message', 'URL analysis completed')
+            details = result.get('details', {})
+            details['scan_type'] = 'local'
         
         return jsonify({
-            'is_malicious': result.get('is_malicious', False),
-            'message': result.get('message', 'URL analysis completed'),
-            'details': result.get('details', {}),
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
             'url': url
         })
     except Exception as e:

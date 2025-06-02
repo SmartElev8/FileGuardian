@@ -1,8 +1,0 @@
-{
-    "is_malicious": false,
-    "confidence": 0.0,
-    "message": "Error: 403 Client Error: Forbidden for url: https://www.virustotal.com/vtapi/v2/file/report?resource=889e2bc1692b2fecb75d57e4cd0760ac608ef72adcdf61f689565e44e64c3995",
-    "details": {
-        "error": "403 Client Error: Forbidden for url: https://www.virustotal.com/vtapi/v2/file/report?resource=889e2bc1692b2fecb75d57e4cd0760ac608ef72adcdf61f689565e44e64c3995"
-    }
-}
