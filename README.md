@@ -24,7 +24,18 @@ The system can analyze the following types of files:
    - Domain reputation checking
    - Phishing detection
 
-3. **Batch Processing**
+3. **Quarantine Management**
+   - Isolate malicious files in a secure quarantine
+   - View all quarantined files
+   - Restore files from quarantine when needed
+   - Permanently delete quarantined files
+
+4. **Activity Tracking**
+   - View scan history of all analyzed files
+   - Track quarantine and restore actions
+   - Monitor security activities on your device
+
+5. **Batch Processing**
    - Analyze multiple files at once
    - Generate comprehensive reports
 
@@ -45,26 +56,38 @@ The system analyzes files based on various features including:
 - Feature selection using ExtraTreesClassifier
 - Regular model updates for improved detection
 
+### Quarantine System
+- Securely isolates malicious files
+- Preserves original file path information
+- Uses device ID for session tracking
+- Maintains file metadata for easy management
+
 ## Usage
 
 ### Web Interface
-1. Access the web interface at `http://localhost:5000`
+1. Access the web interface at `http://localhost:5001`
 2. Choose between file upload or URL analysis
 3. Submit the file or URL for analysis
 4. View the results and detailed report
+5. Quarantine malicious files with one click
+6. Access quarantine and activity history from the navigation menu
 
 ### API Usage
 The system can also be used programmatically through its API endpoints:
 - `/scan/file` - For file analysis
 - `/scan/url` - For URL analysis
+- `/quarantine/file/{scan_id}` - To quarantine a file
+- `/quarantine/restore/{quarantine_id}` - To restore a file from quarantine
+- `/quarantine/delete/{quarantine_id}` - To delete a file from quarantine
 
 ## Requirements
 - Python 3.8 or higher
 - Required Python packages (see requirements.txt):
+  - flask
+  - flask-sqlalchemy
   - numpy
   - pandas
   - scikit-learn
-  - flask
   - joblib
   - other dependencies
 
@@ -84,6 +107,7 @@ The system can also be used programmatically through its API endpoints:
 - Keep the system and dependencies updated
 - Use the system as part of a comprehensive security strategy
 - Do not rely solely on automated detection
+- Regularly review your quarantine and scan history
 
 ## Limitations
 - May not detect zero-day malware
