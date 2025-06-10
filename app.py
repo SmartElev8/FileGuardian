@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import os
 from werkzeug.utils import secure_filename
 import subprocess
@@ -11,6 +11,13 @@ import io
 import logging
 import vt
 from dotenv import load_dotenv
+import uuid
+import shutil
+import sqlite3
+from flask_sqlalchemy import SQLAlchemy
+import platform
+import hashlib
+import time
 
 # Load environment variables
 load_dotenv()
@@ -39,15 +46,221 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'exe', 'pdf', 'docx', 'doc', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'rtf', 'odt', 'zip', 'rar', 'tar', 'gz'}
+app.config['QUARANTINE_FOLDER'] = 'quarantine'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'smartfileguardian-secret-key')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///smartfileguardian.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Ensure upload directory exists
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+
+# Database Models
+class QuarantinedFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.String(64), nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    original_path = db.Column(db.String(512))
+    quarantine_path = db.Column(db.String(512), nullable=False)
+    file_size = db.Column(db.Integer)
+    file_type = db.Column(db.String(64))
+    date_quarantined = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    is_malicious = db.Column(db.Boolean, default=True)
+    threat_details = db.Column(db.Text)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'file_name': self.file_name,
+            'original_path': self.original_path,
+            'file_size': self.file_size,
+            'file_type': self.file_type,
+            'date_quarantined': self.date_quarantined.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_malicious': self.is_malicious,
+            'threat_details': self.threat_details
+        }
+
+class ScannedFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.String(64), nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(512))
+    file_size = db.Column(db.Integer)
+    file_type = db.Column(db.String(64))
+    date_scanned = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    is_malicious = db.Column(db.Boolean, default=False)
+    scan_result = db.Column(db.Text)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'file_name': self.file_name,
+            'file_path': self.file_path,
+            'file_size': self.file_size,
+            'file_type': self.file_type,
+            'date_scanned': self.date_scanned.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_malicious': self.is_malicious,
+            'scan_result': self.scan_result
+        }
+
+class UserActivity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.String(64), nullable=False)
+    activity_type = db.Column(db.String(64), nullable=False)
+    description = db.Column(db.Text)
+    file_name = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'activity_type': self.activity_type,
+            'description': self.description,
+            'file_name': self.file_name,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+# Create database tables
+with app.app_context():
+    db.create_all()
+
+# Ensure upload and quarantine directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['QUARANTINE_FOLDER'], exist_ok=True)
 
 # Ensure static directory exists
 os.makedirs(os.path.join('static', 'images'), exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def get_device_id():
+    """Generate or retrieve a unique device identifier"""
+    if 'device_id' not in session:
+        # Generate a unique device ID based on hardware info
+        system_info = platform.system() + platform.node() + platform.machine()
+        # Add timestamp to make it more unique
+        system_info += str(time.time())
+        # Create a hash of the system info
+        device_hash = hashlib.md5(system_info.encode()).hexdigest()
+        session['device_id'] = device_hash
+    return session['device_id']
+
+def quarantine_file(file_path, original_path=None, is_malicious=True, threat_details=None):
+    """Move a file to quarantine and record in database"""
+    try:
+        # Generate unique filename for quarantine
+        filename = os.path.basename(file_path)
+        file_extension = os.path.splitext(filename)[1]
+        quarantine_filename = f"{uuid.uuid4().hex}{file_extension}"
+        quarantine_path = os.path.join(app.config['QUARANTINE_FOLDER'], quarantine_filename)
+        
+        # Copy file to quarantine
+        shutil.copy2(file_path, quarantine_path)
+        
+        # Get file details
+        file_size = os.path.getsize(file_path)
+        file_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+        
+        # Store in database
+        device_id = get_device_id()
+        quarantined_file = QuarantinedFile(
+            device_id=device_id,
+            file_name=filename,
+            original_path=original_path or file_path,
+            quarantine_path=quarantine_path,
+            file_size=file_size,
+            file_type=file_type,
+            is_malicious=is_malicious,
+            threat_details=json.dumps(threat_details) if threat_details else None
+        )
+        db.session.add(quarantined_file)
+        
+        # Log activity
+        activity = UserActivity(
+            device_id=device_id,
+            activity_type='quarantine',
+            description=f"File '{filename}' was quarantined",
+            file_name=filename
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return True, quarantined_file.id
+    except Exception as e:
+        logger.error(f"Error quarantining file: {str(e)}")
+        return False, str(e)
+
+def restore_file(quarantine_id, restore_path=None):
+    """Restore a file from quarantine"""
+    try:
+        # Get quarantined file record
+        quarantined_file = QuarantinedFile.query.get(quarantine_id)
+        if not quarantined_file:
+            return False, "File not found in quarantine"
+        
+        # Determine restore path
+        if restore_path:
+            # Use provided path
+            target_path = os.path.join(restore_path, quarantined_file.file_name)
+        elif quarantined_file.original_path and os.path.dirname(quarantined_file.original_path):
+            # Use original path if it exists
+            target_path = quarantined_file.original_path
+        else:
+            # Default to desktop
+            target_path = os.path.join(os.path.expanduser("~"), "Desktop", quarantined_file.file_name)
+        
+        # Ensure target directory exists
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        
+        # Copy file from quarantine to target path
+        shutil.copy2(quarantined_file.quarantine_path, target_path)
+        
+        # Log activity
+        device_id = get_device_id()
+        activity = UserActivity(
+            device_id=device_id,
+            activity_type='restore',
+            description=f"File '{quarantined_file.file_name}' was restored to {target_path}",
+            file_name=quarantined_file.file_name
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return True, target_path
+    except Exception as e:
+        logger.error(f"Error restoring file: {str(e)}")
+        return False, str(e)
+
+def delete_quarantined_file(quarantine_id):
+    """Delete a file from quarantine"""
+    try:
+        # Get quarantined file record
+        quarantined_file = QuarantinedFile.query.get(quarantine_id)
+        if not quarantined_file:
+            return False, "File not found in quarantine"
+        
+        # Delete the physical file
+        if os.path.exists(quarantined_file.quarantine_path):
+            os.remove(quarantined_file.quarantine_path)
+        
+        # Log activity
+        device_id = get_device_id()
+        activity = UserActivity(
+            device_id=device_id,
+            activity_type='delete',
+            description=f"File '{quarantined_file.file_name}' was deleted from quarantine",
+            file_name=quarantined_file.file_name
+        )
+        db.session.add(activity)
+        
+        # Delete the database record
+        db.session.delete(quarantined_file)
+        db.session.commit()
+        
+        return True, "File deleted successfully"
+    except Exception as e:
+        logger.error(f"Error deleting quarantined file: {str(e)}")
+        return False, str(e)
 
 def scan_with_virustotal(file_path=None, url=None):
     """Scan a file or URL using VirusTotal API"""
@@ -447,6 +660,10 @@ def scan_file():
     file.save(filepath)
     
     try:
+        # Get device ID
+        device_id = get_device_id()
+        original_path = request.form.get('original_path', '')
+        
         # First try VirusTotal scan
         vt_result = scan_with_virustotal(file_path=filepath)
         
@@ -477,16 +694,42 @@ def scan_file():
             details = {}
         details.update(file_details)
         
-        # Clean up the uploaded file
-        os.remove(filepath)
+        # Record the scan in the database
+        scanned_file = ScannedFile(
+            device_id=device_id,
+            file_name=filename,
+            file_path=original_path or filepath,
+            file_size=file_details.get('file_size', 0),
+            file_type=file_details.get('file_type', 'Unknown'),
+            is_malicious=is_malicious,
+            scan_result=json.dumps(details)
+        )
+        db.session.add(scanned_file)
+        
+        # Log activity
+        activity = UserActivity(
+            device_id=device_id,
+            activity_type='scan',
+            description=f"File '{filename}' was scanned and found to be {'malicious' if is_malicious else 'safe'}",
+            file_name=filename
+        )
+        db.session.add(activity)
+        db.session.commit()
         
         # Prepare the response
         response = {
             'is_malicious': is_malicious,
             'message': message,
             'details': details,
-            'file_name': filename
+            'file_name': filename,
+            'original_path': original_path,
+            'scan_id': scanned_file.id,
+            'can_quarantine': True if is_malicious else False
         }
+        
+        # Don't delete the file if it's malicious - we'll keep it for quarantine option
+        if not is_malicious:
+            os.remove(filepath)
         
         return jsonify(response)
     except Exception as e:
@@ -542,6 +785,129 @@ def scan_url():
             'details': {'error': str(e)},
             'url': url
         }), 500
+
+@app.route('/quarantine', methods=['GET'])
+def quarantine_list():
+    """Display list of quarantined files"""
+    device_id = get_device_id()
+    quarantined_files = QuarantinedFile.query.filter_by(device_id=device_id).order_by(QuarantinedFile.date_quarantined.desc()).all()
+    return render_template('quarantine.html', quarantined_files=quarantined_files)
+
+@app.route('/quarantine/file/<int:scan_id>', methods=['POST'])
+def quarantine_scan_file(scan_id):
+    """Quarantine a file from scan results"""
+    try:
+        # Get the scan record
+        scanned_file = ScannedFile.query.get_or_404(scan_id)
+        
+        # Check if the file is from this device
+        if scanned_file.device_id != get_device_id():
+            return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        # Get the file path from the upload directory
+        filename = secure_filename(scanned_file.file_name)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        if not os.path.exists(filepath):
+            return jsonify({'success': False, 'message': 'File not found'}), 404
+        
+        # Get threat details from scan result
+        threat_details = json.loads(scanned_file.scan_result) if scanned_file.scan_result else None
+        
+        # Move to quarantine
+        success, result = quarantine_file(
+            filepath, 
+            original_path=scanned_file.file_path,
+            is_malicious=scanned_file.is_malicious,
+            threat_details=threat_details
+        )
+        
+        if success:
+            # Delete the file from uploads
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            
+            return jsonify({
+                'success': True, 
+                'message': 'File moved to quarantine successfully',
+                'quarantine_id': result
+            })
+        else:
+            return jsonify({'success': False, 'message': f'Error: {result}'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error quarantining file: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/quarantine/restore/<int:quarantine_id>', methods=['POST'])
+def restore_quarantined_file(quarantine_id):
+    """Restore a file from quarantine"""
+    try:
+        # Get the quarantine record
+        quarantined_file = QuarantinedFile.query.get_or_404(quarantine_id)
+        
+        # Check if the file is from this device
+        if quarantined_file.device_id != get_device_id():
+            return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        # Get restore path from request if provided
+        restore_path = request.form.get('restore_path', None)
+        
+        # Restore the file
+        success, result = restore_file(quarantine_id, restore_path)
+        
+        if success:
+            return jsonify({
+                'success': True, 
+                'message': 'File restored successfully',
+                'restore_path': result
+            })
+        else:
+            return jsonify({'success': False, 'message': f'Error: {result}'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error restoring file: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/quarantine/delete/<int:quarantine_id>', methods=['POST'])
+def delete_from_quarantine(quarantine_id):
+    """Delete a file from quarantine"""
+    try:
+        # Get the quarantine record
+        quarantined_file = QuarantinedFile.query.get_or_404(quarantine_id)
+        
+        # Check if the file is from this device
+        if quarantined_file.device_id != get_device_id():
+            return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        # Delete the file
+        success, result = delete_quarantined_file(quarantine_id)
+        
+        if success:
+            return jsonify({
+                'success': True, 
+                'message': 'File deleted successfully'
+            })
+        else:
+            return jsonify({'success': False, 'message': f'Error: {result}'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error deleting file: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/activity', methods=['GET'])
+def activity_history():
+    """Display user activity history"""
+    device_id = get_device_id()
+    activities = UserActivity.query.filter_by(device_id=device_id).order_by(UserActivity.timestamp.desc()).all()
+    return render_template('activity.html', activities=activities)
+
+@app.route('/scans', methods=['GET'])
+def scan_history():
+    """Display scan history"""
+    device_id = get_device_id()
+    scans = ScannedFile.query.filter_by(device_id=device_id).order_by(ScannedFile.date_scanned.desc()).all()
+    return render_template('scans.html', scans=scans)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5001, debug=True) 
