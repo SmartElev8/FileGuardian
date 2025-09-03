@@ -92,15 +92,46 @@ The system can also be used programmatically through its API endpoints:
   - other dependencies
 
 ## Installation
+
+### Quick Setup
+1. Clone the repository
+2. Run the setup validation script:
+   ```bash
+   python setup.py
+   ```
+3. Follow the instructions provided by the setup script
+4. Run the application:
+   ```bash
+   python app.py
+   ```
+
+### Manual Setup
 1. Clone the repository
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the application:
+3. **IMPORTANT**: Ensure all trained ML models are present in the `Classifier/` directory:
+   - `Classifier/classifier.pkl` (PE file detection model)
+   - `Classifier/features.pkl` (Feature list for PE analysis)
+   - `Classifier/pickel_model.pkl` (URL detection model)
+   - `Classifier/pickel_vector.pkl` (URL vectorizer)
+4. Create a `.env` file with your VirusTotal API key:
+   ```
+   VT_API_KEY=your_virustotal_api_key_here
+   SECRET_KEY=your_secret_key_here
+   ```
+5. Run the application:
    ```bash
    python app.py
    ```
+
+### Troubleshooting
+If you get inconsistent scan results between different machines:
+1. Run `python setup.py` to validate your environment
+2. Ensure all ML models are present and have the correct file sizes
+3. Check that both machines have the same Python package versions
+4. Verify VirusTotal API key is configured correctly
 
 ## Security Considerations
 - Always scan files in a controlled environment

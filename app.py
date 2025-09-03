@@ -298,6 +298,105 @@ def scan_with_virustotal(file_path=None, url=None):
         logger.error(f"Error in VirusTotal scan: {str(e)}")
         return None
 
+def validate_ml_models():
+    """Validate that all required ML models are present"""
+    required_models = [
+        'Classifier/classifier.pkl',
+        'Classifier/features.pkl', 
+        'Classifier/pickel_model.pkl',
+        'Classifier/pickel_vector.pkl'
+    ]
+    
+    missing_models = []
+    for model_path in required_models:
+        if not os.path.exists(model_path):
+            missing_models.append(model_path)
+    
+    if missing_models:
+        logger.error(f"Missing required ML models: {missing_models}")
+        return False, missing_models
+    
+    return True, []
+
+def run_local_file_scan(filepath: str) -> dict:
+    """Run local file scanning using existing models"""
+    try:
+        # Validate models first
+        models_valid, missing_models = validate_ml_models()
+        if not models_valid:
+            return {
+                'is_malicious': False,
+                'message': f'Error: Missing ML models: {missing_models}. Please ensure all trained models are present in Classifier/ directory.',
+                'details': {'error': 'Missing ML models', 'missing': missing_models},
+                'scan_type': 'local'
+            }
+        
+        # Determine which scanner to use based on file extension
+        file_extension = os.path.splitext(filepath)[1].lower()
+        if file_extension in ['.pdf', '.docx']:
+            scanner_script = 'Extract/document_scanner/document_main.py'
+        else:
+            scanner_script = 'Extract/PE_main.py'
+        
+        # Run the appropriate scanner
+        result = subprocess.run(['python', scanner_script, filepath], 
+                              capture_output=True, text=True)
+        
+        # Parse the result
+        try:
+            result_data = json.loads(result.stdout)
+            is_malicious = result_data.get('is_malicious', False)
+            message = result_data.get('message', 'Analysis completed')
+            details = result_data.get('details', {})
+        except json.JSONDecodeError:
+            is_malicious = 'malicious' in result.stdout.lower()
+            message = result.stdout
+            details = {}
+        
+        return {
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
+            'scan_type': 'local'
+        }
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error during local analysis: {str(e)}',
+            'details': {'error': str(e)},
+            'scan_type': 'local'
+        }
+
+def run_local_url_scan(url: str) -> dict:
+    """Run local URL scanning using existing models"""
+    try:
+        result = subprocess.run(['python', 'Extract/url_main.py', url], 
+                              capture_output=True, text=True)
+        
+        try:
+            result_data = json.loads(result.stdout)
+            is_malicious = result_data.get('is_malicious', False)
+            message = result_data.get('message', 'Analysis completed')
+            details = result_data.get('details', {})
+        except json.JSONDecodeError:
+            is_malicious = 'malicious' in result.stdout.lower()
+            message = result.stdout
+            details = {}
+        
+        return {
+            'is_malicious': is_malicious,
+            'message': message,
+            'details': details,
+            'scan_type': 'local'
+        }
+    except Exception as e:
+        return {
+            'is_malicious': False,
+            'message': f'Error during local analysis: {str(e)}',
+            'details': {'error': str(e)},
+            'scan_type': 'local'
+        }
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -575,75 +674,6 @@ def get_file_details(filepath):
             'file_type': 'Unknown',
             'error': str(e),
             'content_summary': 'Error analyzing file content'
-        }
-
-def run_local_file_scan(filepath: str) -> dict:
-    """Run local file scanning using existing models"""
-    try:
-        # Determine which scanner to use based on file extension
-        file_extension = os.path.splitext(filepath)[1].lower()
-        if file_extension in ['.pdf', '.docx']:
-            scanner_script = 'Extract/document_scanner/document_main.py'
-        else:
-            scanner_script = 'Extract/PE_main.py'
-        
-        # Run the appropriate scanner
-        result = subprocess.run(['python', scanner_script, filepath], 
-                              capture_output=True, text=True)
-        
-        # Parse the result
-        try:
-            result_data = json.loads(result.stdout)
-            is_malicious = result_data.get('is_malicious', False)
-            message = result_data.get('message', 'Analysis completed')
-            details = result_data.get('details', {})
-        except json.JSONDecodeError:
-            is_malicious = 'malicious' in result.stdout.lower()
-            message = result.stdout
-            details = {}
-        
-        return {
-            'is_malicious': is_malicious,
-            'message': message,
-            'details': details,
-            'scan_type': 'local'
-        }
-    except Exception as e:
-        return {
-            'is_malicious': False,
-            'message': f'Error during local analysis: {str(e)}',
-            'details': {'error': str(e)},
-            'scan_type': 'local'
-        }
-
-def run_local_url_scan(url: str) -> dict:
-    """Run local URL scanning using existing models"""
-    try:
-        result = subprocess.run(['python', 'Extract/url_main.py', url], 
-                              capture_output=True, text=True)
-        
-        try:
-            result_data = json.loads(result.stdout)
-            is_malicious = result_data.get('is_malicious', False)
-            message = result_data.get('message', 'Analysis completed')
-            details = result_data.get('details', {})
-        except json.JSONDecodeError:
-            is_malicious = 'malicious' in result.stdout.lower()
-            message = result.stdout
-            details = {}
-        
-        return {
-            'is_malicious': is_malicious,
-            'message': message,
-            'details': details,
-            'scan_type': 'local'
-        }
-    except Exception as e:
-        return {
-            'is_malicious': False,
-            'message': f'Error during local analysis: {str(e)}',
-            'details': {'error': str(e)},
-            'scan_type': 'local'
         }
 
 @app.route('/scan/file', methods=['POST'])
